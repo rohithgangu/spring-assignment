@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.demo.model.Employee;
+import com.example.demo.model.Status;
 
 @Service
 public class EmployeeService {
@@ -51,13 +52,15 @@ public class EmployeeService {
 		return restTemplate.getForObject(urlTemplate, Employee.class,params);
 	}
 
-	public ResponseEntity<String> deleteEmloyee(int employeeId) {
+	public ResponseEntity<Status> deleteEmloyee(int employeeId) {
 		String url = "http://Employee-Service/admin/deleteEmployee";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("employeeId", "{employeeId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
 		params.put("employeeId",employeeId );
 		restTemplate.delete(urlTemplate, params);
-		return new ResponseEntity<String>("employee successfully deleated",HttpStatus.ACCEPTED);
+		Status status = new Status();
+		status.setMessage("employee successfully deleated");
+		return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
 	}
 
 }

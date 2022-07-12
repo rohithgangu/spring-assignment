@@ -39,60 +39,88 @@ public class AdminEmployeeResource {
 	@Autowired
 	private EmployeeService employeeService;
 	
+	//get admin
+	@GetMapping("/Admin")
+	public Admin getAdmin(@RequestParam("adminId") int adminId) {
+		return adminService.getAdmin(adminId);
+	}
+	//get all admins
+	@GetMapping("/Admins")
+	public List<Admin> getAdmins(){
+		return adminService.getAdmins();
+	}
 	
+	@DeleteMapping("/DeleteAdmin")
+	public ResponseEntity<Status> deleteAdmin(@RequestParam("adminId") int adminId){
+		return adminService.deleteAdmin(adminId);
+	}
 	
+	//admin login
 	@PostMapping("/Admin/Login")
 	@HystrixCommand(fallbackMethod = "fallbackAdminLogin")
 	public ResponseEntity<Status> adminLogin(@RequestBody Admin admin) {
 		return adminService.adminLogin(admin);
 	}
 	
+	
+	//unloack account
 	@PutMapping("/Admin/Unlock")
-	public ResponseEntity<String> adminUnlock(@RequestBody QueAns queAns ,@RequestParam("adminId") int adminId){
+	public ResponseEntity<Status> adminUnlock(@RequestBody QueAns queAns ,@RequestParam("adminId") int adminId){
 		queAns.setAdminId(adminId);
 		return adminService.adminUnlock(queAns);
 	}
 	
+	
+	//reset password
 	@PutMapping("/Admin/Reset")
-	public ResponseEntity<String> adminPassReset(@RequestBody QueAns queAns,@RequestParam("adminId") int adminId){
+	public ResponseEntity<Status> adminPassReset(@RequestBody QueAns queAns,@RequestParam("adminId") int adminId){
 		queAns.setAdminId(adminId);
 		return adminService.adminReset(queAns);
 	}
 	
+	
+	//admin register
 	@PostMapping("/Admin/Register")
-	public ResponseEntity<String> adminRegister(@RequestBody Admin admin) {
+	public ResponseEntity<Status> adminRegister(@RequestBody Admin admin) {
 		return adminService.adminRegister(admin);
 	}
 	
+	//add security questions
 	@PostMapping("/Admin/AddQuestions")
-	public ResponseEntity<String> addQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Answers> answers){
+	public ResponseEntity<Status> addQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Answers> answers){
 		return adminService.addQuestions(adminId, answers);
 	}
 	
+	
+	// delete security questions
 	@DeleteMapping("/Admin/DeleteQuestions")
-	public ResponseEntity<String> deleteQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Integer> queId)
+	public ResponseEntity<Status> deleteQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Integer> queId)
 	{
 		return adminService.deleteQuestions(adminId,queId);
 	}
 	
-	//employees
+	//get admin employees
 	@GetMapping("/Admin/GetEmployees")
 	public List<Employee> getEmployees(@RequestParam("adminId") int adminId)
 	{
 		return employeeService.getEmployees(adminId);
 	}
 	
+	// add employees
 	@PostMapping("/Admin/AddEmployees")
 	public List<Employee> addEmployees(@RequestParam("adminId") int adminId,@RequestBody List<Employee> emps){
 		return employeeService.addEmployess(adminId,emps);
 	}
+	
+	//update employee details
 	@PutMapping("/Admin/UpdateEmployee")
 	public Employee updateEmployees(@RequestParam("adminId") int adminId,@RequestBody Employee employee){
 		return employeeService.updateEmployeess(adminId,employee);
 	}
 	
+	//delete employee
 	@DeleteMapping("/Admin/DeleteEmployee")
-	public ResponseEntity<String> deleteEmployee(@RequestParam("employeeId") int employeeId){
+	public ResponseEntity<Status> deleteEmployee(@RequestParam("employeeId") int employeeId){
 		return employeeService.deleteEmloyee(employeeId);
 	}
 	
@@ -107,55 +135,4 @@ public class AdminEmployeeResource {
 	
 	
 	
-	/*@GetMapping("/Admins")
-	public List<Admin> getAdmins(){
-		return adminService.getAdmins();
-	}
-	
-	@GetMapping("/AdminById/{adminId}")
-	public Admin getAdminById(@PathVariable("adminId")int adminId) {
-		return adminService.GetAdminById(adminId);
-	}
-	
-	
-	
-	
-	
-	@PostMapping("/Admin/Register")
-	public ResponseEntity<String> adminRegister(@RequestBody Admin admin) {
-		return adminService.adminRegister(admin);
-	}
-	
-	
-	@PutMapping("/Admin/{adminId}/AddSecQue")
-	public Admin addSecQue(@PathVariable("adminId") int adminId,@RequestBody List<Answers> answers)
-	{
-		return adminService.addSecQue(adminId,answers);
-	}
-	
-	@PutMapping("/Admin/{adminId}/UnlockAccount")
-	public ResponseEntity<String> unlockAccount(@PathVariable("adminId") int adminId,@RequestBody QueAns queAns){
-		queAns.setAdminId(adminId);
-		return adminService.unlockAdmin(queAns);
-	}
-	
-	@PutMapping("/Admin/{adminId}/ResetPassword")
-	public ResponseEntity<String> ResetPassword(@PathVariable("adminId") int adminId,@RequestBody QueAns queAns) {
-		queAns.setAdminId(adminId);
-		return adminService.resetPassword(queAns);
-	}
-	
-	@DeleteMapping("/Admin/{adminId}/DeleteQuestions")
-	public ResponseEntity<String> deleteQuestion(@PathVariable("adminId") int adminId,@RequestBody List<Integer> queId)
-	{
-		return adminService.deleteQuestions(adminId,queId);
-	}
-	
-	
-	
-	//employee controller
-	@GetMapping("/Admin/{adminId}/employees")
-	public List<Employee> getAdminEmployees(@PathVariable("adminId")int adminId){
-		return employeeService.getAdminEmployees(adminId);
-	}*/
 }

@@ -21,39 +21,7 @@ public class AdminService {
 
 	@Autowired
 	private RestTemplate restTemplate;
-
-	/*public ResponseEntity<String> adminLogin(Admin admin){
-		String url = "http://Admin-service/GetAdmin";
-		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
-		Map<String, Integer> params = new HashMap<String,Integer>();
-		params.put("adminId", admin.getAdminId());
-		Admin existingAdmin = restTemplate.getForObject(urlTemplate,Admin.class,params);
-		int currentStatus = existingAdmin.getAdminStatus();
-		if(currentStatus<3) 
-		{
-			
-			if(existingAdmin.getAdminPassword().equals(admin.getAdminPassword())) 
-			{
-				existingAdmin.setAdminStatus(0);
-				//adminRepository.save(existingAdmin);
-				restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
-				return new ResponseEntity<>("correct password",HttpStatus.ACCEPTED);
-		}
-		else {
-			existingAdmin.setAdminStatus(currentStatus+1);
-			restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
-			if(existingAdmin.getAdminStatus()==3) {
-				return new ResponseEntity<> ("you have entered wrong password and your account has been locked",HttpStatus.BAD_REQUEST);
-			}
-			else {
-			return new ResponseEntity<String>("wrong password try again",HttpStatus.BAD_REQUEST);
-			}
-			}
-		}
-		else {
-			return new ResponseEntity<>("your account has been locked please unlock to continue",HttpStatus.BAD_REQUEST);
-		}
-	}*/
+	
 	
 	
 	public ResponseEntity<Status> adminLogin(Admin admin){
@@ -66,7 +34,6 @@ public class AdminService {
 		Status status = new Status();
 		if(currentStatus<3) 
 		{
-			
 			if(existingAdmin.getAdminPassword().equals(admin.getAdminPassword())) 
 			{
 				existingAdmin.setAdminStatus(0);
@@ -107,13 +74,15 @@ public class AdminService {
 		return flag;
 	}
 
-	public ResponseEntity<String> adminUnlock(QueAns queAns) {
+	public ResponseEntity<Status> adminUnlock(QueAns queAns) {
 		String url = "http://Admin-service/GetAdmin";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
 		params.put("adminId", queAns.getAdminId());
 		//Admin admin = adminRepository.findById(queAns.getAdminId()).orElse(null);
 		Admin admin = restTemplate.getForObject(urlTemplate, Admin.class,params);
+		Status status = new Status();
+		
 		if(admin.getAdminStatus()>=3) {
 		List<Answers> allCorrectAnswers = admin.getQuestions();
 		List<QuestionUnlock> givenQns=queAns.getAnswersList();
@@ -123,21 +92,25 @@ public class AdminService {
 			admin.setAdminStatus(0);
 			//adminRepository.save(admin);
 			restTemplate.postForObject("http://Admin-service/AddAdmin", admin, Admin.class);
-			return new ResponseEntity<>("account unlocked",HttpStatus.ACCEPTED);
+			status.setMessage("account unlocked");
+			return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
 		}
 		else {
-			return new ResponseEntity<>("answer for the security question does not match",HttpStatus.BAD_REQUEST);
+			status.setMessage("answer for the security question does not match");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 		}
 		}
 		else {
-			return new ResponseEntity<>("please provide answers for atleast 2 security questions",HttpStatus.BAD_REQUEST);
+			status.setMessage("please provide answers for atleast 2 security questions");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 		}}
 		else {
-			return new ResponseEntity<String>("your account is not locked please procedd to login",HttpStatus.BAD_REQUEST);
+			status.setMessage("your account is not locked please procedd to login");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 		}
 	}
 
-	public ResponseEntity<String> adminReset(QueAns queAns) {
+	public ResponseEntity<Status> adminReset(QueAns queAns) {
 		String url = "http://Admin-service/GetAdmin";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
@@ -145,43 +118,52 @@ public class AdminService {
 		Admin admin = restTemplate.getForObject(urlTemplate, Admin.class,params);
 		List<Answers> allCorrectAnswers = admin.getQuestions();
 		List<QuestionUnlock> givenQns=queAns.getAnswersList();
+		Status status = new Status();
 		if(givenQns.size()>=2) {
 		int flag = checkQuestions(givenQns, allCorrectAnswers);
 		if (flag == givenQns.size()) {
 			admin.setAdminPassword(queAns.getNewPassword());
 			restTemplate.postForObject("http://Admin-service/AddAdmin", admin, Admin.class);
-			return new ResponseEntity<>("password reset successfull",HttpStatus.ACCEPTED);
+			status.setMessage("password reset successfull");
+			return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
 		}
 		else {
-			return new ResponseEntity<>("answer for the security question does not match",HttpStatus.BAD_REQUEST);
+			status.setMessage("answer for the security question does not match");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 		}
 		}
 		else {
-			return new ResponseEntity<>("please provide answers for atleast 2 security questions",HttpStatus.BAD_REQUEST);
+			status.setMessage("please provide answers for atleast 2 security questions");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 		}
 	}
 
-	public ResponseEntity<String> adminRegister(Admin admin) {
+	public ResponseEntity<Status> adminRegister(Admin admin) {
+		Status status = new Status();
 		if(admin.getQuestions().size()<2) {
-			return new ResponseEntity<String>("please provide atleast two security questions",HttpStatus.BAD_REQUEST);
+			status.setMessage("please provide atleast two security questions");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 
 		}
 		else {
 			 restTemplate.postForEntity("http://Admin-service/AddAdmin", admin, String.class);
-			 return new ResponseEntity<String>("succesfully registered",HttpStatus.ACCEPTED);
+			 status.setMessage("succesfully registered");
+			 return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
 		}
 	}
 
-	public ResponseEntity<String> addQuestions(int adminId,List<Answers> answers) {
+	public ResponseEntity<Status> addQuestions(int adminId,List<Answers> answers) {
 		String url = "http://Admin-service/AddQuestions";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
 		params.put("adminId",adminId );
 		restTemplate.put(urlTemplate, answers,params);
-		return new ResponseEntity<String>("questions added successfully",HttpStatus.ACCEPTED);
+		Status status = new Status();
+		status.setMessage("questions added successfully");
+		return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
 	}
 
-	public ResponseEntity<String> deleteQuestions(int adminId, List<Integer> queId) {
+	public ResponseEntity<Status> deleteQuestions(int adminId, List<Integer> queId) {
 		String url = "http://Admin-service/DeleteQuestion";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
@@ -190,56 +172,40 @@ public class AdminService {
 			HttpEntity<Integer> request = new HttpEntity<Integer>(queId.get(i));
 			restTemplate.exchange(urlTemplate, HttpMethod.DELETE,request,String.class,params);
 		}
-		return new ResponseEntity<String>("questions deleted",HttpStatus.ACCEPTED);
-	}
-	
-	/*public ResponseEntity<String> adminLogin(Admin admin) {
-		ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:8083/AdminLogin",admin,String.class);
-		//return response;
-		
-		return new ResponseEntity<String>(response.getBody(),response.getStatusCode());  
+		Status status = new Status();
+		status.setMessage("questions deleted");
+		return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
 	}
 
-	public ResponseEntity<String> adminRegister(Admin admin) {
-		return  restTemplate.postForEntity("http://localhost:8083/AddAdmin", admin, String.class);
+
+	public Admin getAdmin(int adminId) {
+		String url = "http://Admin-service/GetAdmin";
+		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
+		Map<String, Integer> params = new HashMap<String,Integer>();
+		params.put("adminId", adminId);
+		return restTemplate.getForObject(urlTemplate,Admin.class,params);
 	
 	}
+
 
 	public List<Admin> getAdmins() {
-		return restTemplate.getForObject("http://localhost:8083/Admin",List.class);
+		String url = "http://Admin-service/GetAdmins";
+		return restTemplate.getForObject(url,List.class);
 	}
 
-	public Admin GetAdminById(int adminId) {
-		return restTemplate.getForObject("http://localhost:8083/AdminById/"+adminId, Admin.class);
-	}
 
-	public Admin addSecQue(int adminId,List<Answers> answers) {
-		restTemplate.put("http://localhost:8083/Admin/"+adminId+"/AddQuestions",answers);
-		return GetAdminById(adminId);
+	public ResponseEntity<Status> deleteAdmin(int adminId) {
+		String url = "http://Admin-service/DeleteAdmin";
+		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
+		Map<String, Integer> params = new HashMap<String,Integer>();
+		params.put("adminId", adminId);
+		restTemplate.delete(urlTemplate, params);
+		Status status = new Status();
+		status.setMessage("succesfully deleted Admin");
+		return new ResponseEntity<Status>(status,HttpStatus.ACCEPTED);
 	}
-
 	
-	public ResponseEntity<String> unlockAdmin(QueAns queAns) {
-		String url= "http://localhost:8083/Admin/"+queAns.getAdminId()+"/UnlockAccount";
-		HttpEntity<QueAns> request = new HttpEntity<>(queAns);
-		return restTemplate.exchange(url, HttpMethod.PUT,request,String.class);
-	}
 
-	
-	public ResponseEntity<String> resetPassword(QueAns queAns){
-		String url = "http://localhost:8083/Admin/"+ queAns.getAdminId()+"/ResetPassword";
-		HttpEntity<QueAns> request = new HttpEntity<>(queAns);
-		return restTemplate.exchange(url, HttpMethod.PUT,request,String.class);
-		
-
-	}
-
-	public ResponseEntity<String> deleteQuestions(int adminId, List<Integer> queId) {
-		String url = "http://localhost:8083/Admin/"+adminId+"/DeleteQuestions";
-		HttpEntity<List<Integer>> request = new HttpEntity<List<Integer>>(queId);
-		return restTemplate.exchange(url, HttpMethod.DELETE,request,String.class);
-	}
-	*/
 	
 	
 	//new mehtods
