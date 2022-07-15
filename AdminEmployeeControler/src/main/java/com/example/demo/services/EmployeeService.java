@@ -34,22 +34,27 @@ public class EmployeeService {
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
 		params.put("adminId",adminId );
+		for(int i =0;i<emps.size();i++) {
+			emps.get(i).setAdminId(adminId);
+		}
 		return restTemplate.postForObject(urlTemplate,emps,List.class, params);
 	}
 
-	public Employee updateEmployeess(int adminId, Employee employee) {
+	public ResponseEntity<Status> updateEmployeess(int adminId, Employee employee) {
 		String url = "http://Employee-Service/employee";
 		String url2 = "http://Employee-Service/admin/updateEmployee";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("employeeId", "{employeeId}").encode().toUriString();
-		//String urlTemplate2 = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
-
 		Map<String, Integer> params = new HashMap<String,Integer>();
+		employee.setAdminId(adminId);
 		params.put("employeeId",employee.getEmployeeId() );
 		Employee currEmployee = restTemplate.getForObject(urlTemplate,Employee.class,params);
 		currEmployee.setEmployeeName(employee.getEmployeeName());
 		currEmployee.setEmployeeId(employee.getEmployeeId());
 		restTemplate.put(url2, currEmployee);
-		return restTemplate.getForObject(urlTemplate, Employee.class,params);
+		restTemplate.getForObject(urlTemplate, Employee.class,params);
+		Status status = new Status();
+		status.setMessage("employee successfully updated");
+		return new ResponseEntity<>(status,HttpStatus.OK);
 	}
 
 	public ResponseEntity<Status> deleteEmloyee(int employeeId) {
@@ -60,7 +65,7 @@ public class EmployeeService {
 		restTemplate.delete(urlTemplate, params);
 		Status status = new Status();
 		status.setMessage("employee successfully deleated");
-		return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
+		return new ResponseEntity<>(status,HttpStatus.OK);
 	}
 
 }

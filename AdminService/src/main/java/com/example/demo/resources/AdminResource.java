@@ -64,13 +64,16 @@ public class AdminResource {
 		adminService.deleteAdmin(adminId);
 	}
 	
-	/*@GetMapping("/AdminLogin")
+	@GetMapping("/AdminLogin")
 	public Admin getAdminLogin(@RequestParam(name="adminId") int adminId,@RequestParam("adminName") String adminName) {
 		Admin admin;
 		if(adminId!=0) {
 			admin=adminService.getAdmin(adminId);
-			admin.setQuestions(questionService.getquestions(adminId))
 		}
-	}*/
+		else {
+			admin=adminService.getAdmin(adminName);
+		}
+		return admin;
+	}
 
 }

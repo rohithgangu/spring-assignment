@@ -77,5 +77,11 @@ public class Admin {
 		super();
 	}
 
+
+	public Admin(String adminName) {
+		super();
+		this.adminName = adminName;
+	}
+
 	
 }

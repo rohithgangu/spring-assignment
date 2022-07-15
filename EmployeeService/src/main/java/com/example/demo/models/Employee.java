@@ -2,6 +2,7 @@ package com.example.demo.models;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 @Table(name = "employee_data")
 public class Employee {
 @Id
+@GeneratedValue
 @Column(name = "employee_id")
 private int employeeId;
 @Column(name = "employee_name")

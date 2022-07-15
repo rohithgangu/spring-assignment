@@ -24,7 +24,7 @@ public class AdminService {
 	
 	
 	
-	public ResponseEntity<Status> adminLogin(Admin admin){
+	/*public ResponseEntity<Status> adminLogin(Admin admin){
 		String url = "http://Admin-service/GetAdmin";
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
@@ -59,7 +59,7 @@ public class AdminService {
 			status.setMessage("your account has been locked please unlock to continue");
 			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
 		}
-	}
+	}*/
 	
 	
 	public int checkQuestions(List<QuestionUnlock> qU,List<Answers> aQA) {
@@ -79,7 +79,6 @@ public class AdminService {
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
 		params.put("adminId", queAns.getAdminId());
-		//Admin admin = adminRepository.findById(queAns.getAdminId()).orElse(null);
 		Admin admin = restTemplate.getForObject(urlTemplate, Admin.class,params);
 		Status status = new Status();
 		
@@ -93,7 +92,7 @@ public class AdminService {
 			//adminRepository.save(admin);
 			restTemplate.postForObject("http://Admin-service/AddAdmin", admin, Admin.class);
 			status.setMessage("account unlocked");
-			return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
+			return new ResponseEntity<>(status,HttpStatus.OK);
 		}
 		else {
 			status.setMessage("answer for the security question does not match");
@@ -146,9 +145,12 @@ public class AdminService {
 
 		}
 		else {
+			for(int i=0;i<admin.getQuestions().size();i++) {
+				admin.getQuestions().get(i).getId().setAdmin_id(admin.getAdminId());
+			}
 			 restTemplate.postForEntity("http://Admin-service/AddAdmin", admin, String.class);
 			 status.setMessage("succesfully registered");
-			 return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
+			 return new ResponseEntity<>(status,HttpStatus.CREATED);
 		}
 	}
 
@@ -157,10 +159,13 @@ public class AdminService {
 		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
 		Map<String, Integer> params = new HashMap<String,Integer>();
 		params.put("adminId",adminId );
+		for(int i=0;i<answers.size();i++) {
+			answers.get(i).getId().setAdmin_id(adminId);
+		}
 		restTemplate.put(urlTemplate, answers,params);
 		Status status = new Status();
 		status.setMessage("questions added successfully");
-		return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
+		return new ResponseEntity<>(status,HttpStatus.CREATED);
 	}
 
 	public ResponseEntity<Status> deleteQuestions(int adminId, List<Integer> queId) {
@@ -174,7 +179,7 @@ public class AdminService {
 		}
 		Status status = new Status();
 		status.setMessage("questions deleted");
-		return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
+		return new ResponseEntity<>(status,HttpStatus.OK);
 	}
 
 
@@ -202,7 +207,50 @@ public class AdminService {
 		restTemplate.delete(urlTemplate, params);
 		Status status = new Status();
 		status.setMessage("succesfully deleted Admin");
-		return new ResponseEntity<Status>(status,HttpStatus.ACCEPTED);
+		return new ResponseEntity<Status>(status,HttpStatus.OK);
+	}
+
+
+	
+	
+	
+	//new login
+	public ResponseEntity<Status> loginAdmin(Admin admin) {
+		String url = "http://Admin-service/AdminLogin";
+		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").queryParam("adminName", "{adminName}").encode().toUriString();
+		Map<String, Object> params = new HashMap<String,Object>();
+		params.put("adminId", admin.getAdminId());
+		params.put("adminName", admin.getAdminName());
+		Admin existingAdmin = restTemplate.getForObject(urlTemplate,Admin.class,params);
+		int currentStatus = existingAdmin.getAdminStatus();
+		Status status = new Status();
+		if(currentStatus<3) 
+		{
+			if(existingAdmin.getAdminPassword().equals(admin.getAdminPassword())) 
+			{
+				existingAdmin.setAdminStatus(0);
+				//adminRepository.save(existingAdmin);
+				restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
+				status.setMessage("correct password");
+				return new ResponseEntity<>(status,HttpStatus.OK);
+		}
+		else {
+			existingAdmin.setAdminStatus(currentStatus+1);
+			restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
+			if(existingAdmin.getAdminStatus()==3) {
+				status.setMessage("you have entered wrong password and your account has been locked");
+				return new ResponseEntity<> (status,HttpStatus.BAD_REQUEST);
+			}
+			else {
+				status.setMessage("wrong password try again");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
+			}
+			}
+		}
+		else {
+			status.setMessage("your account has been locked please unlock to continue");
+			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
+		}
 	}
 	
 

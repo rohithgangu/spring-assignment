@@ -35,6 +35,11 @@ public Employee(int employeeId, String employeeName, int adminId) {
 public Employee() {
 	super();
 }
+public Employee( String employeeName) {
+	super();
+	this.employeeName = employeeName;
+}
+
 
 
 

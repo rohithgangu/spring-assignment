@@ -59,5 +59,10 @@ public class AdminService {
 		adminRepository.deleteById(adminId);
 	}
 
+
+	public Admin getAdmin(String adminName) {
+		return adminRepository.findByAdminName(adminName);
+	}
+
 	
 }
