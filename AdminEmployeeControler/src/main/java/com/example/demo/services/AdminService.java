@@ -1,9 +1,19 @@
 package com.example.demo.services;
 
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
+
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -14,52 +24,17 @@ import com.example.demo.model.Answers;
 import com.example.demo.model.QueAns;
 import com.example.demo.model.QuestionUnlock;
 import com.example.demo.model.Status;
+import com.google.inject.Key;
 
 import org.springframework.http.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 @Service
 public class AdminService {
 
 	@Autowired
 	private RestTemplate restTemplate;
 	
-	
-	
-	/*public ResponseEntity<Status> adminLogin(Admin admin){
-		String url = "http://Admin-service/GetAdmin";
-		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
-		Map<String, Integer> params = new HashMap<String,Integer>();
-		params.put("adminId", admin.getAdminId());
-		Admin existingAdmin = restTemplate.getForObject(urlTemplate,Admin.class,params);
-		int currentStatus = existingAdmin.getAdminStatus();
-		Status status = new Status();
-		if(currentStatus<3) 
-		{
-			if(existingAdmin.getAdminPassword().equals(admin.getAdminPassword())) 
-			{
-				existingAdmin.setAdminStatus(0);
-				//adminRepository.save(existingAdmin);
-				restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
-				status.setMessage("correct password");
-				return new ResponseEntity<>(status,HttpStatus.ACCEPTED);
-		}
-		else {
-			existingAdmin.setAdminStatus(currentStatus+1);
-			restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
-			if(existingAdmin.getAdminStatus()==3) {
-				status.setMessage("you have entered wrong password and your account has been locked");
-				return new ResponseEntity<> (status,HttpStatus.BAD_REQUEST);
-			}
-			else {
-				status.setMessage("wrong password try again");
-			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
-			}
-			}
-		}
-		else {
-			status.setMessage("your account has been locked please unlock to continue");
-			return new ResponseEntity<>(status,HttpStatus.BAD_REQUEST);
-		}
-	}*/
 	
 	
 	public int checkQuestions(List<QuestionUnlock> qU,List<Answers> aQA) {
@@ -196,6 +171,16 @@ public class AdminService {
 	public List<Admin> getAdmins() {
 		String url = "http://Admin-service/GetAdmins";
 		return restTemplate.getForObject(url,List.class);
+	}
+	
+	public Admin getAdminauth(String adminName) {
+		String url = "http://Admin-service/AdminByName";
+		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminName", "{adminName}").encode().toUriString();
+		Map<String, String> params = new HashMap<String,String>();
+		params.put("adminName", adminName);
+		Admin admin = restTemplate.getForObject(urlTemplate, Admin.class,params);
+		return admin;
+
 	}
 
 

@@ -75,5 +75,10 @@ public class AdminResource {
 		}
 		return admin;
 	}
+	
+	@GetMapping("/AdminByName")
+	public Admin getAdminByName(@RequestParam(name = "adminName") String adminName) {
+		return adminService.getAdmin(adminName);
+	}
 
 }
