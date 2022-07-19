@@ -9,19 +9,17 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.model.Admin;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService{
 
-	@Autowired
-	private AdminService adminService;
+	/*@Autowired
+	private AdminService adminService;*/
 	
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Admin admin = adminService.getAdminauth(username);
-		return new User(admin.getAdminName(),admin.getAdminPassword(),new ArrayList<>());
+		return new User(username,null,new ArrayList<>());
 	}
 	
 	

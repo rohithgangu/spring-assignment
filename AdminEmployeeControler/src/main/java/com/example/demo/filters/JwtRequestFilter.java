@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.demo.services.MyUserDetailsService;
+import com.example.demo.services.MyUserDetailService;
 import com.example.demo.utility.JwtUtil;
 
 
@@ -24,7 +24,7 @@ import com.example.demo.utility.JwtUtil;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
 	@Autowired
-	private MyUserDetailsService myUserDetailsService;
+	private MyUserDetailService myUserDetailsService;
 	@Autowired JwtUtil jwtUtil;
 	
 	

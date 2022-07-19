@@ -12,13 +12,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -35,6 +35,7 @@ import com.example.demo.model.QueAns;
 import com.example.demo.model.Status;
 import com.example.demo.services.AdminService;
 import com.example.demo.services.EmployeeService;
+import com.example.demo.services.MyUserDetailService;
 import com.example.demo.utility.JwtUtil;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
@@ -48,10 +49,11 @@ public class AdminEmployeeResource {
 	private AdminService adminService;
 	@Autowired
 	private EmployeeService employeeService;
+
 	@Autowired
 	private AuthenticationManager authenticationManager;
 	@Autowired
-	private UserDetailsService userDetailsService;
+	private MyUserDetailService myUserDetailsService;
 	@Autowired
 	private JwtUtil jwtTokenUtil;
 	
@@ -65,17 +67,33 @@ public class AdminEmployeeResource {
 				new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
 		}
 		catch (BadCredentialsException e) {
-			//throw new Exception("Incorrect username or password",e);
-			return new ResponseEntity<>(new Status("password does not match"),HttpStatus.BAD_REQUEST);
+			throw new Exception("Incorrect username or password");
+			//return new ResponseEntity<>(new Status("password does not match"),HttpStatus.BAD_REQUEST);
 			
 		}
-		final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+		final UserDetails userDetails = myUserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 		final String jwt = jwtTokenUtil.generateToken(userDetails);
 		
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 	
-	 
+	public String CreateJwt(String username,String password) throws Exception {
+		AuthenticationRequest authenticationRequest = new AuthenticationRequest(username,password);
+		try {
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
+			}
+			catch (BadCredentialsException e) {
+				throw new Exception("Incorrect username or password");
+				//return new ResponseEntity<>(new Status("password does not match"),HttpStatus.BAD_REQUEST);
+				
+			}
+			final UserDetails userDetails = myUserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+			final String jwt = jwtTokenUtil.generateToken(userDetails);
+			
+			return jwt;
+	}
+
 	
 	
 	
@@ -85,6 +103,20 @@ public class AdminEmployeeResource {
 	public Admin getAdmin(@RequestParam("adminId") int adminId) {
 		return adminService.getAdmin(adminId);
 	}
+	
+	@GetMapping("/AdminByName")
+	@HystrixCommand(fallbackMethod = "fallbackGetAdminByName")
+	public Admin getAdminByName(@RequestHeader("Authorization") String jwt) {
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		return adminService.getAdminauth(adminName);
+	}
+	
+	public Admin fallbackGetAdminByName(@RequestHeader("Authorization") String jwt) {
+		Admin admin = new Admin("Admin API service is not working");
+		return admin;
+	}
+	
 	//get all admins
 	@GetMapping("/Admins")
 	@HystrixCommand(fallbackMethod = "fallbackGetAdmins")
@@ -180,9 +212,17 @@ public class AdminEmployeeResource {
 	//login with id and name
 	@PostMapping("/Admin/Login")
 	@HystrixCommand(fallbackMethod = "fallbackAdminLogin")
-	public ResponseEntity<Status> loginAdmin(@RequestBody Admin admin){
+	public ResponseEntity<Status> loginAdmin(@RequestBody Admin admin) throws Exception{
+		HttpStatus httpStatus = adminService.loginAdmin(admin).getStatusCode();
+		if (httpStatus==HttpStatus.OK) {
+			Status status = new Status();
+			String jwt = CreateJwt(admin.getAdminName(), admin.getAdminPassword());
+			status.setMessage(jwt);
+			return new ResponseEntity<>(status,HttpStatus.OK);
+		}
 		return adminService.loginAdmin(admin);
 	}
+	
 	
 	
 	//fallback methods

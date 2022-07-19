@@ -8,33 +8,37 @@ import java.util.Map;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.demo.model.Admin;
 import com.example.demo.model.Answers;
+import com.example.demo.model.AuthenticationRequest;
+import com.example.demo.model.AuthenticationResponse;
 import com.example.demo.model.QueAns;
 import com.example.demo.model.QuestionUnlock;
 import com.example.demo.model.Status;
+import com.example.demo.utility.JwtUtil;
 import com.google.inject.Key;
 
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+
 @Service
 public class AdminService {
 
 	@Autowired
 	private RestTemplate restTemplate;
-	
+
+
 	
 	
 	public int checkQuestions(List<QuestionUnlock> qU,List<Answers> aQA) {
@@ -216,6 +220,7 @@ public class AdminService {
 				existingAdmin.setAdminStatus(0);
 				//adminRepository.save(existingAdmin);
 				restTemplate.postForObject("http://Admin-service/AddAdmin", existingAdmin, Admin.class);
+				
 				status.setMessage("correct password");
 				return new ResponseEntity<>(status,HttpStatus.OK);
 		}
@@ -240,8 +245,6 @@ public class AdminService {
 	
 
 	
-	
-	//new mehtods
 	
 	
 	

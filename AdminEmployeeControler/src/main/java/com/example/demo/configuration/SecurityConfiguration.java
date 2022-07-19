@@ -1,10 +1,8 @@
 package com.example.demo.configuration;
 
-import org.aspectj.weaver.ast.And;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,35 +11,36 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.example.demo.filters.JwtRequestFilter;
-import com.example.demo.services.MyUserDetailsService;
+import com.example.demo.services.MyUserDetailService;
 
 @EnableWebSecurity
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter{
+
+
+	@Autowired
+	private MyUserDetailService myUserDetailsService;
+	
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter;
-	@Autowired
-	private MyUserDetailsService myUserDetailsService;
-	
+
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception{
 		auth.userDetailsService(myUserDetailsService);
-		
 	}
+	
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception{
 		http.csrf().disable()
-		.authorizeRequests().antMatchers("/authenticate").permitAll()
+		.authorizeRequests().antMatchers("/**").permitAll()
 		.and()
-		.authorizeRequests().antMatchers("/AdminByName").permitAll()
-		.anyRequest().authenticated()
+		.authorizeRequests().antMatchers("/authenticate").permitAll()
 		.and().sessionManagement()
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		
-		http.addFilterBefore(jwtRequestFilter,UsernamePasswordAuthenticationFilter.class);
+	//http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class );
 	}
 	
 	@Bean
@@ -53,5 +52,5 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	@Bean
 	public AuthenticationManager authenticationManagerBean()throws Exception{
 		return super.authenticationManagerBean();
-	}
+	}	
 }
