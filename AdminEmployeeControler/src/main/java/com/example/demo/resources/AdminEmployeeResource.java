@@ -60,7 +60,7 @@ public class AdminEmployeeResource {
 	
 	
 	//JWT login
-	@PostMapping("/authenticate")
+	/*@PostMapping("/authenticate")
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception{
 		try {
 		authenticationManager.authenticate(
@@ -75,7 +75,7 @@ public class AdminEmployeeResource {
 		final String jwt = jwtTokenUtil.generateToken(userDetails);
 		
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
-	}
+	}*/
 	
 	public String CreateJwt(String username,String password) throws Exception {
 		AuthenticationRequest authenticationRequest = new AuthenticationRequest(username,password);
@@ -93,7 +93,6 @@ public class AdminEmployeeResource {
 			
 			return jwt;
 	}
-
 	
 	
 	
@@ -103,6 +102,11 @@ public class AdminEmployeeResource {
 	public Admin getAdmin(@RequestParam("adminId") int adminId) {
 		return adminService.getAdmin(adminId);
 	}
+	public Admin fallbackGetAdmin(@RequestParam("adminId") int adminId) {
+		Admin admin = new Admin("Admin API service is not working");
+		return admin;
+	}
+	
 	
 	@GetMapping("/AdminByName")
 	@HystrixCommand(fallbackMethod = "fallbackGetAdminByName")
@@ -123,11 +127,23 @@ public class AdminEmployeeResource {
 	public List<Admin> getAdmins(){
 		return adminService.getAdmins();
 	}
+
+	public List<Admin> fallbackGetAdmins(){
+		List<Admin> list =  new ArrayList<>();
+		list.add(new Admin("Employee API service not working"));		
+		return list;
+	}
 	
 	@DeleteMapping("/DeleteAdmin")
 	@HystrixCommand(fallbackMethod = "fallbackDeleteAdmin")
-	public ResponseEntity<Status> deleteAdmin(@RequestParam("adminId") int adminId){
-		return adminService.deleteAdmin(adminId);
+	public ResponseEntity<Status> deleteAdmin(@RequestHeader("Authorization") String jwt){
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		return adminService.deleteAdmin(adminName);
+	}
+	public ResponseEntity<Status> fallbackDeleteAdmin(@RequestHeader("Authorization") String jwt){
+		Status status = new Status("Admin API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
 	}
 	
 	//admin login
@@ -141,20 +157,28 @@ public class AdminEmployeeResource {
 	//unloack account
 	@PutMapping("/Admin/Unlock")
 	@HystrixCommand(fallbackMethod = "fallbackAdminUnlock")
-	public ResponseEntity<Status> adminUnlock(@RequestBody QueAns queAns ,@RequestParam("adminId") int adminId){
-		queAns.setAdminId(adminId);
+	public ResponseEntity<Status> adminUnlock(@RequestBody QueAns queAns ,@RequestParam("adminName") String adminName){
+		Admin admin = adminService.getAdminauth(adminName);
+		queAns.setAdminId(admin.getAdminId());
 		return adminService.adminUnlock(queAns);
 	}
-	
+	public ResponseEntity<Status> fallbackAdminUnlock(@RequestBody QueAns queAns ,@RequestParam("adminName") String adminName){
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
+	}
 	
 	//reset password
 	@PutMapping("/Admin/Reset")
 	@HystrixCommand(fallbackMethod = "fallbackAdminReset")
-	public ResponseEntity<Status> adminPassReset(@RequestBody QueAns queAns,@RequestParam("adminId") int adminId){
-		queAns.setAdminId(adminId);
+	public ResponseEntity<Status> adminPassReset(@RequestBody QueAns queAns,@RequestParam("adminName") String adminName){
+		Admin admin = adminService.getAdminauth(adminName);
+		queAns.setAdminId(admin.getAdminId());
 		return adminService.adminReset(queAns);
 	}
-	
+	public ResponseEntity<Status> fallbackAdminReset(@RequestBody QueAns queAns ,@RequestParam("adminName") String adminName){
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
+	}
 	
 	//admin register
 	@PostMapping("/Admin/Register")
@@ -162,44 +186,89 @@ public class AdminEmployeeResource {
 	public ResponseEntity<Status> adminRegister(@RequestBody Admin admin) {
 		return adminService.adminRegister(admin);
 	}
+	public ResponseEntity<Status> fallbackAdminRegister(@RequestBody Admin admin) {
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);	}
 	
 	//add security questions
 	@PostMapping("/Admin/AddQuestions")
 	@HystrixCommand(fallbackMethod = "fallbackAddQuestions")
-	public ResponseEntity<Status> addQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Answers> answers){
-		return adminService.addQuestions(adminId, answers);
+	public ResponseEntity<Status> addQuestions(@RequestHeader("Authorization") String jwt,@RequestBody List<Answers> answers){
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		Admin admin = adminService.getAdminauth(adminName);
+		return adminService.addQuestions(admin.getAdminId(), answers);
 	}
-	
+	public ResponseEntity<Status> fallbackAddQuestions(@RequestHeader("Authorization") String jwt,@RequestBody List<Answers> answers){
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
+	}
 	
 	// delete security questions
 	@DeleteMapping("/Admin/DeleteQuestions")
 	@HystrixCommand(fallbackMethod = "fallbackDeleteQuestions")
-	public ResponseEntity<Status> deleteQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Integer> queId)
+	public ResponseEntity<Status> deleteQuestions(@RequestHeader("Authorization") String jwt,@RequestBody List<Integer> queId)
 	{
-		return adminService.deleteQuestions(adminId,queId);
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		Admin admin = adminService.getAdminauth(adminName);
+		return adminService.deleteQuestions(admin.getAdminId(),queId);
 	}
+	public ResponseEntity<Status> fallbackDeleteQuestions(@RequestHeader("Authorization") String jwt,@RequestBody List<Integer> queId){
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
+		}
+	
 	
 	//get admin employees
 	@GetMapping("/Admin/GetEmployees")
 	@HystrixCommand(fallbackMethod = "fallbackGetEmployees")
-	public List<Employee> getEmployees(@RequestParam("adminId") int adminId)
+	public List<Employee> getEmployees(@RequestHeader("Authorization") String jwt)
 	{
-		return employeeService.getEmployees(adminId);
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		Admin admin = adminService.getAdminauth(adminName);
+		return employeeService.getEmployees(admin.getAdminId());
+	}
+	
+	public List<Employee> fallbackGetEmployees(@RequestHeader("Authorization") String jwt){
+		List<Employee> list =  new ArrayList<>();
+		list.add(new Employee("Employee API service not working"));		
+		return list;
 	}
 	
 	// add employees
 	@PostMapping("/Admin/AddEmployees")
 	@HystrixCommand(fallbackMethod = "fallbackAddEmployees")
-	public List<Employee> addEmployees(@RequestParam("adminId") int adminId,@RequestBody List<Employee> emps){
-		return employeeService.addEmployess(adminId,emps);
+	public List<Employee> addEmployees(@RequestHeader("Authorization") String jwt,@RequestBody List<Employee> emps){
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		Admin admin = adminService.getAdminauth(adminName);
+		return employeeService.addEmployess(admin.getAdminId(),emps);
 	}
+	public List<Employee> fallbackAddEmployees(@RequestHeader("Authorization") String jwt,@RequestBody List<Employee> emps){
+		List<Employee> list =  new ArrayList<>();
+		list.add(new Employee("Employee API service not working"));		
+		return list;
+	}
+	
+	
 	
 	//update employee details
 	@PutMapping("/Admin/UpdateEmployee")
 	@HystrixCommand(fallbackMethod = "fallbackUpdateEmployees")
-	public ResponseEntity<Status> updateEmployees(@RequestParam("adminId") int adminId,@RequestBody Employee employee){
-		return employeeService.updateEmployeess(adminId,employee);
+	public ResponseEntity<Status> updateEmployees(@RequestHeader("Authorization") String jwt,@RequestBody Employee employee){
+		jwt = jwt.substring(7);
+		String adminName = jwtTokenUtil.extractUsername(jwt);
+		Admin admin = adminService.getAdminauth(adminName);
+		return employeeService.updateEmployeess(admin.getAdminId(),employee);
 	}
+	public ResponseEntity<Status> fallbackUpdateEmployees(@RequestHeader("Authorization") String jwt,@RequestBody Employee employee){
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
+	}
+	
+	
 	
 	//delete employee
 	@DeleteMapping("/Admin/DeleteEmployee")
@@ -207,20 +276,26 @@ public class AdminEmployeeResource {
 	public ResponseEntity<Status> deleteEmployee(@RequestParam("employeeId") int employeeId){
 		return employeeService.deleteEmloyee(employeeId);
 	}
-	
+	public ResponseEntity<Status> fallbackDeleteEmployee(@RequestParam("employeeId") int employeeId){
+		Status status = new Status("Employee API service not working");
+		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
+	}
 	
 	//login with id and name
 	@PostMapping("/Admin/Login")
 	@HystrixCommand(fallbackMethod = "fallbackAdminLogin")
 	public ResponseEntity<Status> loginAdmin(@RequestBody Admin admin) throws Exception{
-		HttpStatus httpStatus = adminService.loginAdmin(admin).getStatusCode();
+		ResponseEntity<Status> responseEntity = adminService.loginAdmin(admin);
+		HttpStatus httpStatus = responseEntity.getStatusCode();
 		if (httpStatus==HttpStatus.OK) {
 			Status status = new Status();
 			String jwt = CreateJwt(admin.getAdminName(), admin.getAdminPassword());
 			status.setMessage(jwt);
 			return new ResponseEntity<>(status,HttpStatus.OK);
 		}
-		return adminService.loginAdmin(admin);
+		Status status = new Status();
+		status.setMessage(responseEntity.getBody().getMessage());
+		return new ResponseEntity<Status>(status,httpStatus);
 	}
 	
 	
@@ -231,66 +306,27 @@ public class AdminEmployeeResource {
 		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
 	}
 	
-	public List<Employee> fallbackGetEmployees(@RequestParam("adminId") int adminId){
-		List<Employee> list =  new ArrayList<>();
-		list.add(new Employee("Employee API service not working"));		
-		return list;
-	}
 
-	public ResponseEntity<Status> fallbackDeleteEmployee(@RequestParam("employeeId") int employeeId){
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
-	public ResponseEntity<Status> fallbackDeleteAdmin(@RequestParam("adminId") int adminId){
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
 
-	public ResponseEntity<Status> fallbackAdminUnlock(@RequestBody QueAns queAns ,@RequestParam("adminId") int adminId){
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
 	
-	public ResponseEntity<Status> fallbackUpdateEmployees(@RequestParam("adminId") int adminId,@RequestBody Employee employee){
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
-
-	public List<Employee> fallbackAddEmployees(@RequestParam("adminId") int adminId,@RequestBody List<Employee> emps){
-		List<Employee> list =  new ArrayList<>();
-		list.add(new Employee("Employee API service not working"));		
-		return list;
-	}
 	
-	public Admin fallbackGetAdmin(@RequestParam("adminId") int adminId) {
-		Admin admin = new Admin("Admin API service is not working");
-		return admin;
-	}
 
-	public List<Admin> fallbackGetAdmins(){
-		List<Admin> list =  new ArrayList<>();
-		list.add(new Admin("Employee API service not working"));		
-		return list;
-	}
-
-	public ResponseEntity<Status> fallbackAdminReset(@RequestBody QueAns queAns,@RequestParam("adminId") int adminId){
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
 	
-	public ResponseEntity<Status> fallbackAdminRegister(@RequestBody Admin admin) {
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);	}
 	
-	public ResponseEntity<Status> fallbackAddQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Answers> answers){
-		Status status = new Status("Employee API service not working");
-		return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
+	
 
-	public ResponseEntity<Status> fallbackDeleteQuestions(@RequestParam("adminId") int adminId,@RequestBody List<Integer> queId){
-	Status status = new Status("Employee API service not working");
-	return new ResponseEntity<Status>(status,HttpStatus.SERVICE_UNAVAILABLE);
-	}
+	
+	
+	
+
+
+	
+	
+	
+	
+	
+
+	
 }
 
 	

@@ -21,4 +21,6 @@ public interface AdminRepository extends JpaRepository<Admin, Integer> {
 	Admin findByAdminName(String adminName);
 
 	Admin getAdminByAdminName(String adminName);
+	
+	Admin deleteByAdminName(String adminName);
 }

@@ -60,8 +60,8 @@ public class AdminResource {
 	}
 	
 	@DeleteMapping("/DeleteAdmin")
-	public void deleteAdmin(@RequestParam("adminId") int adminId) {
-		adminService.deleteAdmin(adminId);
+	public void deleteAdmin(@RequestParam("adminName") String adminName) {
+		adminService.deleteAdmin(adminName);
 	}
 	
 	@GetMapping("/AdminLogin")

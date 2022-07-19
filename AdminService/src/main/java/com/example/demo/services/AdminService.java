@@ -55,8 +55,9 @@ public class AdminService {
 	}
 
 
-	public void deleteAdmin(int adminId) {
-		adminRepository.deleteById(adminId);
+	public void deleteAdmin(String adminName) {
+		Admin admin = adminRepository.findByAdminName(adminName);
+		adminRepository.deleteById(admin.getAdminId());
 	}
 
 

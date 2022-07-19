@@ -188,11 +188,11 @@ public class AdminService {
 	}
 
 
-	public ResponseEntity<Status> deleteAdmin(int adminId) {
+	public ResponseEntity<Status> deleteAdmin(String adminName) {
 		String url = "http://Admin-service/DeleteAdmin";
-		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminId", "{adminId}").encode().toUriString();
-		Map<String, Integer> params = new HashMap<String,Integer>();
-		params.put("adminId", adminId);
+		String urlTemplate = UriComponentsBuilder.fromHttpUrl(url).queryParam("adminName", "{adminName}").encode().toUriString();
+		Map<String, String> params = new HashMap<String,String>();
+		params.put("adminName", adminName);
 		restTemplate.delete(urlTemplate, params);
 		Status status = new Status();
 		status.setMessage("succesfully deleted Admin");
